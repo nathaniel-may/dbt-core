@@ -9,7 +9,7 @@ import dbt.flags as flags
 from dbt.config.runtime import RuntimeConfig
 from dbt.adapters.factory import get_adapter, register_adapter, reset_adapters
 from dbt.events.functions import setup_event_logger
-from dbt.tests.util import write_file, run_sql_with_adapter
+from dbt.tests.util import write_file, run_sql_with_adapter, TestProcessingException
 
 
 # These are the fixtures that are used in dbt core functional tests
@@ -207,6 +207,8 @@ def write_project_files(project_root, dir_name, file_dict):
 
 # Write files out from file_dict. Can be nested directories...
 def write_project_files_recursively(path, file_dict):
+    if type(file_dict) is not dict:
+        raise TestProcessingException(f"Error creating {path}. Did you forget the file extension?")
     for name, value in file_dict.items():
         if name.endswith(".sql") or name.endswith(".csv") or name.endswith(".md"):
             write_file(value, path, name)

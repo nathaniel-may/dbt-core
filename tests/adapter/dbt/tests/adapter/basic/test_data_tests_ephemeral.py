@@ -10,7 +10,7 @@ from dbt.tests.adapter.basic.files import (
 )
 
 
-class TestDataTestEphemerals:
+class BaseDataTestsEphemeral:
     @pytest.fixture(scope="class")
     def seeds(self):
         return {
@@ -39,7 +39,7 @@ class TestDataTestEphemerals:
             "name": "data_test_ephemeral_models",
         }
 
-    def test_data_test_ephemerals(self, project):
+    def test_data_tests_ephemeral(self, project):
         # check results from seed command
         results = run_dbt(["seed"])
         assert len(results) == 1
@@ -61,3 +61,7 @@ class TestDataTestEphemerals:
         results = run_dbt()
         assert len(results) == 2
         check_result_nodes_by_name(results, ["failing_model", "passing_model"])
+
+
+class TestDataTestsEphemeral(BaseDataTestsEphemeral):
+    pass

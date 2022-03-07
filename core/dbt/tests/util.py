@@ -315,7 +315,6 @@ def update_rows(adapter, update_rows_config):
                 clause=clause,
                 where_clause=where,
             )
-            print(f"--- update_rows sql: {sql}")
             adapter.execute(sql, auto_begin=True)
             adapter.commit_if_has_connection()
 

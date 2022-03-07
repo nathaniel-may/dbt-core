@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:dbt-labs/dbt-tests-adapter.git
 	branch = main
-	commit = 7c473159cfda6414a00eb6a1fe7dddc438e3675b
-	parent = 25f954b562bd4622e312fd0b8522a39a1a89e3d5
+	commit = a6a7d87c20a73faf475e802c91b651ba24655db1
+	parent = 996f1f1bec3a66956d9bfe27de05284fe0a0d548
 	method = merge
 	cmdver = 0.4.3
