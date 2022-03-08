@@ -59,7 +59,7 @@ snapshots_check_col_noconfig__snapshot_sql = """
 """
 
 
-class OverRideTabelComparison_dbt(TableComparison):
+class OverrideTableComparison_dbt(TableComparison):
     def _assert_tables_equal_sql(self, relation_a, relation_b, columns=None):
         # When building the equality tests, only test columns that don't start
         # with 'dbt_', because those are time-sensitive
@@ -149,7 +149,7 @@ def basic_snapshot(project):
 @pytest.fixture
 def check_cols_snapshot(project):
     NUM_SNAPSHOT_MODELS = 2
-    table_comp = OverRideTabelComparison_dbt(
+    table_comp = OverrideTableComparison_dbt(
         adapter=project.adapter, unique_schema=project.test_schema, database=project.database
     )
 
