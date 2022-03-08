@@ -15,20 +15,34 @@ from tests.functional.simple_snapshot.fixtures import (  # noqa: F401
 )
 
 snapshots_check_col__snapshot_sql = """
-    {% snapshot snapshot_actual %}
+{% snapshot snapshot_actual %}
 
-        {{
-            config(
-                target_database=var('target_database', database),
-                target_schema=schema,
-                unique_key='id || ' ~ "'-'" ~ ' || first_name',
-                strategy='check',
-                check_cols=['email'],
-            )
-        }}
-        select * from {{target.database}}.{{schema}}.seed
+    {{
+        config(
+            target_database=var('target_database', database),
+            target_schema=schema,
+            unique_key='id || ' ~ "'-'" ~ ' || first_name',
+            strategy='check',
+            check_cols=['email'],
+        )
+    }}
+    select * from {{target.database}}.{{schema}}.seed
 
-    {% endsnapshot %}
+{% endsnapshot %}
+
+{# This should be exactly the same #}
+{% snapshot snapshot_checkall %}
+    {{
+        config(
+            target_database=var('target_database', database),
+            target_schema=schema,
+            unique_key='id || ' ~ "'-'" ~ ' || first_name',
+            strategy='check',
+            check_cols='all',
+        )
+    }}
+    select * from {{target.database}}.{{schema}}.seed
+{% endsnapshot %}
 """
 
 
@@ -45,96 +59,7 @@ snapshots_check_col_noconfig__snapshot_sql = """
 """
 
 
-class BasicSetup:
-    """
-    This tests is reused for multiple test cases
-    """
-
-    NUM_SNAPSHOT_MODELS = 1
-
-    def assert_expected(self, table_comp):
-        """
-        This is pulled out so it can be overridden in subclasses
-        """
-
-        run_dbt(["test"])
-        table_comp.assert_tables_equal("snapshot_actual", "snapshot_expected")
-
-    def test_basic_snapshot(self, project):
-        """
-        This exact test is run multiple times with various macors/tests/snapshots
-        """
-        path = os.path.join(project.test_data_dir, "seed_pg.sql")
-        project.run_sql_file(path)
-        results = run_dbt(["snapshot"])
-        assert len(results) == self.NUM_SNAPSHOT_MODELS
-        table_comp = TableComparison(
-            adapter=project.adapter, unique_schema=project.test_schema, database=project.database
-        )
-
-        self.assert_expected(table_comp)
-
-        path = os.path.join(project.test_data_dir, "invalidate_postgres.sql")
-        project.run_sql_file(path)
-
-        path = os.path.join(project.test_data_dir, "update.sql")
-        project.run_sql_file(path)
-
-        results = run_dbt(["snapshot"])
-        assert len(results) == 1
-
-        self.assert_expected(table_comp)
-
-
-class RefSetup:
-    """
-    This tests is reused for multiple test cases
-    """
-
-    NUM_SNAPSHOT_MODELS = 1
-
-    def test_basic_ref(self, project):
-        path = os.path.join(project.test_data_dir, "seed_pg.sql")
-        project.run_sql_file(path)
-        results = run_dbt(["snapshot"])
-        assert len(results) == self.NUM_SNAPSHOT_MODELS
-
-        results = run_dbt(["run"])
-        assert len(results) == 1
-
-
-# all of the tests below use one of both of the above tests with
-# various combinations of snapshots and macros
-class TestBasic(BasicSetup, RefSetup):
-    @pytest.fixture(scope="class")
-    def snapshots(self, snapshots_pg):  # noqa: F811
-        return snapshots_pg
-
-
-class TestCustomNamespace(BasicSetup):
-    @pytest.fixture(scope="class")
-    def snapshots(self, snapshots_pg_custom_namespaced):  # noqa: F811
-        return snapshots_pg_custom_namespaced
-
-    @pytest.fixture(scope="class")
-    def macros(self, macros_custom_snapshot):  # noqa: F811
-        return macros_custom_snapshot
-
-
-class TestCustomSnapshot(BasicSetup, RefSetup):
-    @pytest.fixture(scope="class")
-    def snapshots(self, snapshots_pg_custom):  # noqa: F811
-        return snapshots_pg_custom
-
-    @pytest.fixture(scope="class")
-    def macros(self, macros_custom_snapshot):  # noqa: F811
-        return macros_custom_snapshot
-
-
-class TestCheckCols(BasicSetup, RefSetup):
-    # TODO: this test overrides how we check equality - it's broken
-    NUM_SNAPSHOT_MODELS = 2
-
+class OverRideTabelComparison_dbt(TableComparison):
     def _assert_tables_equal_sql(self, relation_a, relation_b, columns=None):
         # When building the equality tests, only test columns that don't start
         # with 'dbt_', because those are time-sensitive
@@ -146,37 +71,8 @@ class TestCheckCols(BasicSetup, RefSetup):
             ]
         return super()._assert_tables_equal_sql(relation_a, relation_b, columns=columns)
 
-    def assert_expected(self, table_comp):
-        super().assert_expected(table_comp)
-        self.assert_case_tables_equal("snapshot_checkall", "snapshot_expected")
 
-    @pytest.fixture(scope="class")
-    def snapshots(self):
-        return {"snapshot.sql": snapshots_check_col__snapshot_sql}
-
-
-# TODO: can't test below until TestCheckCols is fixed
-class TestConfiguredCheckCols(TestCheckCols):
-    @pytest.fixture(scope="class")
-    def snapshots(self):
-        return {"snapshot.sql": snapshots_check_col_noconfig__snapshot_sql}
-
-    @pytest.fixture(scope="class")
-    def project_config_update(self):
-        snapshot_config = {
-            "snapshots": {
-                "test": {
-                    "target_schema": self.project.test_schema,
-                    "unique_key": "id || '-' || first_name",
-                    "strategy": "check",
-                    "check_cols": ["email"],
-                }
-            }
-        }
-        return snapshot_config
-
-
-class TestUpdatedAtCheckCols(TestCheckCols):
+class RevivedTableComparison(TableComparison):
     def _assert_tables_equal_sql(self, relation_a, relation_b, columns=None):
         revived_records = self.run_sql(
             """
@@ -205,10 +101,164 @@ class TestUpdatedAtCheckCols(TestCheckCols):
             ]
         return super()._assert_tables_equal_sql(relation_a, relation_b, columns=columns)
 
-    def assert_expected(self, table_comp):
-        super().assert_expected(table_comp)
-        table_comp.assert_tables_equal("snapshot_checkall", "snapshot_expected")
 
+def snapshot_setup(project, NUM_SNAPSHOT_MODELS, table_comp):
+    path = os.path.join(project.test_data_dir, "seed_pg.sql")
+    project.run_sql_file(path)
+    results = run_dbt(["snapshot"])
+    assert len(results) == NUM_SNAPSHOT_MODELS
+
+    run_dbt(["test"])
+    table_comp.assert_tables_equal("snapshot_actual", "snapshot_expected")
+
+    path = os.path.join(project.test_data_dir, "invalidate_postgres.sql")
+    project.run_sql_file(path)
+
+    path = os.path.join(project.test_data_dir, "update.sql")
+    project.run_sql_file(path)
+
+    results = run_dbt(["snapshot"])
+    assert len(results) == NUM_SNAPSHOT_MODELS
+
+    run_dbt(["test"])
+    table_comp.assert_tables_equal("snapshot_actual", "snapshot_expected")
+
+
+def ref_setup(project, NUM_SNAPSHOT_MODELS):
+
+    path = os.path.join(project.test_data_dir, "seed_pg.sql")
+    project.run_sql_file(path)
+    results = run_dbt(["snapshot"])
+    assert len(results) == NUM_SNAPSHOT_MODELS
+
+    results = run_dbt(["run"])
+    assert len(results) == 1
+
+
+# these fixtures are slight variations of each other for the basic snapshot tests run
+@pytest.fixture
+def basic_snapshot(project):
+    NUM_SNAPSHOT_MODELS = 1
+    table_comp = TableComparison(
+        adapter=project.adapter, unique_schema=project.test_schema, database=project.database
+    )
+
+    snapshot_setup(project, NUM_SNAPSHOT_MODELS, table_comp)
+
+
+@pytest.fixture
+def check_cols_snapshot(project):
+    NUM_SNAPSHOT_MODELS = 2
+    table_comp = OverRideTabelComparison_dbt(
+        adapter=project.adapter, unique_schema=project.test_schema, database=project.database
+    )
+
+    snapshot_setup(project, NUM_SNAPSHOT_MODELS, table_comp)
+
+
+@pytest.fixture
+def revived_snapshot(project):
+    NUM_SNAPSHOT_MODELS = 2
+    table_comp = RevivedTableComparison(
+        adapter=project.adapter, unique_schema=project.test_schema, database=project.database
+    )
+
+    snapshot_setup(project, NUM_SNAPSHOT_MODELS, table_comp)
+
+
+@pytest.fixture
+def basic_ref(project):
+    NUM_SNAPSHOT_MODELS = 1
+    ref_setup(project, NUM_SNAPSHOT_MODELS)
+
+
+@pytest.fixture
+def basic_ref_two_snapshots(project):
+    NUM_SNAPSHOT_MODELS = 2
+    ref_setup(project, NUM_SNAPSHOT_MODELS)
+
+
+class Basic:
+    @pytest.fixture(scope="class")
+    def snapshots(self, snapshots_pg):  # noqa: F811
+        return snapshots_pg
+
+
+@pytest.mark.usefixtures("project")
+class TestBasicSnapshot(Basic):
+    def test_basic_snapshot(project, basic_snapshot):
+        basic_snapshot
+
+
+@pytest.mark.usefixtures("project")
+class TestBasicRef(Basic):
+    def test_basic_ref(project, basic_ref):
+        basic_ref
+
+
+class CustomNamespace:
+    @pytest.fixture(scope="class")
+    def snapshots(self, snapshots_pg_custom_namespaced):  # noqa: F811
+        return snapshots_pg_custom_namespaced
+
+    @pytest.fixture(scope="class")
+    def macros(self, macros_custom_snapshot):  # noqa: F811
+        return macros_custom_snapshot
+
+
+@pytest.mark.usefixtures("project")
+class TestBasicCustomNamespace(CustomNamespace):
+    def test_basic_snapshot(project, basic_snapshot):
+        basic_snapshot
+
+
+@pytest.mark.usefixtures("project")
+class TestRefCustomNamespace(CustomNamespace):
+    def test_basic_ref(project, basic_ref):
+        basic_ref
+
+
+class CustomSnapshot:
+    @pytest.fixture(scope="class")
+    def snapshots(self, snapshots_pg_custom):  # noqa: F811
+        return snapshots_pg_custom
+
+    @pytest.fixture(scope="class")
+    def macros(self, macros_custom_snapshot):  # noqa: F811
+        return macros_custom_snapshot
+
+
+@pytest.mark.usefixtures("project")
+class TestBasicCustomSnapshot(CustomSnapshot):
+    def test_basic_snapshot(project, basic_snapshot):
+        basic_snapshot
+
+
+@pytest.mark.usefixtures("project")
+class TestRefCustomSnapshot(CustomSnapshot):
+    def test_basic_ref(project, basic_ref):
+        basic_ref
+
+
+class CheckCols:
+    @pytest.fixture(scope="class")
+    def snapshots(self):
+        return {"snapshot.sql": snapshots_check_col__snapshot_sql}
+
+
+@pytest.mark.usefixtures("project")
+class TestBasicCheckCols(CheckCols):
+    def test_basic_snapshot(project, check_cols_snapshot):
+        check_cols_snapshot
+
+
+@pytest.mark.usefixtures("project")
+class TestRefCheckCols(CheckCols):
+    def test_basic_ref(project, basic_ref_two_snapshots):
+        basic_ref_two_snapshots
+
+
+class ConfiguredCheckCols:
     @pytest.fixture(scope="class")
     def snapshots(self):
         return {"snapshot.sql": snapshots_check_col_noconfig__snapshot_sql}
@@ -218,7 +268,39 @@ class TestUpdatedAtCheckCols(TestCheckCols):
         snapshot_config = {
             "snapshots": {
                 "test": {
-                    "target_schema": self.unique_schema(),
+                    "target_schema": "{{ target.schema }}",
+                    "unique_key": "id || '-' || first_name",
+                    "strategy": "check",
+                    "check_cols": ["email"],
+                }
+            }
+        }
+        return snapshot_config
+
+
+@pytest.mark.usefixtures("project")
+class TestBasicConfiguredCheckCols(ConfiguredCheckCols):
+    def test_basic_snapshot(project, check_cols_snapshot):
+        check_cols_snapshot
+
+
+@pytest.mark.usefixtures("project")
+class TestRefConfiguredCheckCols(ConfiguredCheckCols):
+    def test_basic_ref(project, basic_ref_two_snapshots):
+        basic_ref_two_snapshots
+
+
+class UpdatedAtCheckCols:
+    @pytest.fixture(scope="class")
+    def snapshots(self):
+        return {"snapshot.sql": snapshots_check_col_noconfig__snapshot_sql}
+
+    @pytest.fixture(scope="class")
+    def project_config_update(self):
+        snapshot_config = {
+            "snapshots": {
+                "test": {
+                    "target_schema": "{{ target.schema }}",
                     "unique_key": "id || '-' || first_name",
                     "strategy": "check",
                     "check_cols": "all",
@@ -227,3 +309,15 @@ class TestUpdatedAtCheckCols(TestCheckCols):
             }
         }
         return snapshot_config
+
+
+@pytest.mark.usefixtures("project")
+class TestBasicUpdatedAtCheckCols(UpdatedAtCheckCols):
+    def test_basic_snapshot(project, revived_snapshot):
+        revived_snapshot
+
+
+@pytest.mark.usefixtures("project")
+class TestRefUpdatedAtCheckCols(UpdatedAtCheckCols):
+    def test_basic_ref(project, basic_ref_two_snapshots):
+        basic_ref_two_snapshots
