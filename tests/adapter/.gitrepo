@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:dbt-labs/dbt-tests-adapter.git
+	branch = main
+	commit = b0aff4018ce9cd61266ffa3659021b54682afe32
+	parent = f121578e12310420f2e07fe6592fa8ca525a4123
+	method = merge
+	cmdver = 0.4.3
