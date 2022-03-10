@@ -28,7 +28,8 @@ on:
         required: true
       commit_results:
         description: commit results directly to the above branch when finished? (true/false)
-        default: false
+        default: 'false'
+        required: true
 
 env:
   RUNNER_CACHE_PATH: performance/runner/target/release/runner
