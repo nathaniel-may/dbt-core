@@ -43,6 +43,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RUSTFLAGS: "-D warnings"
+    outputs:
+      cacheKey: ${{ steps.cacheKey.outputs.key }}
     steps:
 
       # explicitly checkout the performance runner from main regardless of which
@@ -63,6 +65,7 @@ jobs:
         id: cache
         with:
           path: ${{ env.RUNNER_CACHE_PATH }}
+          # TODO this doesn't exist because it was created in the previous job.
           key: ${{ steps.cacheKey.outputs.key }}
 
       - name: Fetch Rust Toolchain
@@ -143,7 +146,7 @@ jobs:
         id: cache
         with:
           path: ${{ env.RUNNER_CACHE_PATH }}
-          key: ${{ steps.cacheKey.outputs.key }}
+          key: ${{ needs.latest-runner.outputs.cacheKey }}
 
       - name: Move Runner
         run: mv performance/runner/target/release/runner ./performance/app
