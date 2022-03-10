@@ -150,7 +150,7 @@ jobs:
           key: ${{ needs.latest-runner.outputs.cacheKey }}
 
       - name: Move Runner
-        run: mv performance/runner/target/release/runner ./performance/app
+        run: mv performance/runner/target/release/runner performance/app
 
       - name: Change Runner Permissions
         run: chmod +x ./performance/app
