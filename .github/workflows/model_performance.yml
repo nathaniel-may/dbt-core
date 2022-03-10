@@ -155,6 +155,12 @@ jobs:
       - name: Change Runner Permissions
         run: chmod +x ./performance/app
 
+      - name: Debug ls
+        run: ls ${{ github.workspace }}/performance/
+
+      - name: Debug ls
+        run: ls ${{ github.workspace }}/performance/projects/
+
       # `${{ github.workspace }}` is used to pass the absolute path
       - name: Run Measurement
         run: mkdir tmp && mkdir -p baselines/${{ steps.variables.outputs.release_id }}/ && ls -F && ./app model -v ${{ steps.variables.outputs.release_id }} -b ${{ github.workspace }}/performance/baselines/ -p ${{ github.workspace }}/performance/projects/ -t ${{ github.workspace }}/performance/tmp/ -n 2
