@@ -163,8 +163,7 @@ jobs:
 
       # `${{ github.workspace }}` is used to pass the absolute path
       - name: Run Measurement
-        run: mkdir tmp && mkdir -p baselines/${{ steps.variables.outputs.release_id }}/ && ls -F && ${{ github.workspace }}/performance/app model -v ${{ steps.variables.outputs.release_id }} -b ${{ github.workspace }}/performance/baselines/ -p ${{ github.workspace }}/performance/projects/ -t ${{ github.workspace }}/performance/tmp/ -n 2
-        working-directory: ${{ github.workspace }}/performance/
+        run: mkdir tmp && mkdir -p baselines/${{ steps.variables.outputs.release_id }}/ && ls -F && performance/app model -v ${{ steps.variables.outputs.release_id }} -b ${{ github.workspace }}/performance/baselines/ -p ${{ github.workspace }}/performance/projects/ -t ${{ github.workspace }}/performance/tmp/ -n 2
 
       - name: Commit Baseline
         uses: EndBug/add-and-commit@v8
