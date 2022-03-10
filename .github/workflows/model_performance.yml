@@ -161,6 +161,12 @@ jobs:
       - name: Debug ls
         run: ls ${{ github.workspace }}/performance/projects/
 
+      # explicitly checkout main to get the latest project definitions
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: main
+
       # `${{ github.workspace }}` is used to pass the absolute path
       - name: Run Measurement
         run: mkdir tmp && mkdir -p baselines/${{ steps.variables.outputs.release_id }}/ && ls -F && ./app model -v ${{ steps.variables.outputs.release_id }} -b ${{ github.workspace }}/performance/baselines/ -p ${{ github.workspace }}/performance/projects/ -t ${{ github.workspace }}/performance/tmp/ -n 2
