@@ -36,7 +36,7 @@ env:
 
 # both jobs need to write
 permissions:
-  contents: write
+  contents: [read, write]
 
 jobs:
   latest-runner:
