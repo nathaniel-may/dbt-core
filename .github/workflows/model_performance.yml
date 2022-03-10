@@ -155,12 +155,6 @@ jobs:
       - name: Change Runner Permissions
         run: chmod +x ./performance/app
 
-      - name: Debug ls
-        run: ls ${{ github.workspace }}/performance/
-
-      - name: Debug ls
-        run: ls ${{ github.workspace }}/performance/projects/
-
       # explicitly checkout main to get the latest project definitions
       - name: Checkout
         uses: actions/checkout@v2
