@@ -3,7 +3,6 @@ import shutil
 import yaml
 import json
 from typing import List
-from itertools import chain, repeat
 
 from dbt.main import handle_and_check
 from dbt.logger import log_manager
@@ -154,8 +153,8 @@ class TestProcessingException(Exception):
 
 
 def relation_from_name(adapter, name: str):
-    """reverse-engineer a relation (including quoting) from a given name and
-    the adapter. Assumes that relations are split by the '.' character.
+    """reverse-engineer a relation from a given name and
+    the adapter. The relation name is split by the '.' character.
     """
 
     # Different adapters have different Relation classes
@@ -163,28 +162,19 @@ def relation_from_name(adapter, name: str):
     credentials = adapter.config.credentials
     quote_policy = cls.get_default_quote_policy().to_dict()
     include_policy = cls.get_default_include_policy().to_dict()
-    kwargs = {}  # This will contain database, schema, identifier
 
-    parts = name.split(".")
-    names = ["database", "schema", "identifier"]
-    defaults = [credentials.database, credentials.schema, None]
-    values = chain(repeat(None, 3 - len(parts)), parts)
-    for name, value, default in zip(names, values, defaults):
-        # no quote policy -> use the default
-        if value is None:
-            if default is None:
-                include_policy[name] = False
-            value = default
-        else:
-            include_policy[name] = True
-            # if we have a value, we can figure out the quote policy.
-            trimmed = value[1:-1]
-            if adapter.quote(trimmed) == value:
-                quote_policy[name] = True
-                value = trimmed
-            else:
-                quote_policy[name] = False
-        kwargs[name] = value
+    # Make sure we have database/schema/identifier parts, even if
+    # only identifier was supplied.
+    relation_parts = name.split(".")
+    if len(relation_parts) == 1:
+        relation_parts.insert(0, credentials.schema)
+    if len(relation_parts) == 2:
+        relation_parts.insert(0, credentials.database)
+    kwargs = {
+        "database": relation_parts[0],
+        "schema": relation_parts[1],
+        "identifier": relation_parts[2],
+    }
 
     relation = cls.create(
         include_policy=include_policy,
