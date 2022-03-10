@@ -4,10 +4,11 @@ import pytz
 import pytest
 from dbt.tests.util import run_dbt
 from dbt.tests.tables import TableComparison
-from tests.functional.simple_snapshot.fixtures import (  # noqa: F401
-    models,
-    macros,
-    snapshots_pg,
+from tests.functional.simple_snapshot.fixtures import (
+    models__schema_yml,
+    models__ref_snapshot_sql,
+    macros__test_no_overlaps_sql,
+    snapshots_pg__snapshot_sql,
 )
 
 
@@ -25,8 +26,21 @@ def datetime_snapshot():
 
 
 @pytest.fixture(scope="class")
-def snapshots(snapshots_pg):  # noqa: F811
-    return snapshots_pg
+def snapshots():
+    return {"snapshot.sql": snapshots_pg__snapshot_sql}
+
+
+@pytest.fixture(scope="class")
+def models():
+    return {
+        "schema.yml": models__schema_yml,
+        "ref_snapshot.sql": models__ref_snapshot_sql,
+    }
+
+
+@pytest.fixture(scope="class")
+def macros():
+    return {"test_no_overlaps.sql": macros__test_no_overlaps_sql}
 
 
 def test_snapshot_hard_delete(project):

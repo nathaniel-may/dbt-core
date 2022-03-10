@@ -2,13 +2,15 @@ import os
 import pytest
 from dbt.tests.util import run_dbt
 from dbt.tests.tables import TableComparison
-from tests.functional.simple_snapshot.fixtures import (  # noqa: F401
-    models,
-    seeds,
-    macros,
+from tests.functional.simple_snapshot.fixtures import (
+    seeds__seed_newcol_csv,
+    seeds__seed_csv,
+    models__schema_yml,
+    models__ref_snapshot_sql,
+    macros__test_no_overlaps_sql,
     snapshots_pg__snapshot_sql,
     snapshots_select__snapshot_sql,
-    snapshots_select_noconfig,
+    snapshots_select_noconfig__snapshot_sql,
 )
 
 
@@ -84,6 +86,21 @@ class SelectBasicSetup:
             "snapshot_select.sql": snapshots_select__snapshot_sql,
         }
 
+    @pytest.fixture(scope="class")
+    def seeds(self):
+        return {"seed_newcol.csv": seeds__seed_newcol_csv, "seed.csv": seeds__seed_csv}
+
+    @pytest.fixture(scope="class")
+    def models(self):
+        return {
+            "schema.yml": models__schema_yml,
+            "ref_snapshot.sql": models__ref_snapshot_sql,
+        }
+
+    @pytest.fixture(scope="class")
+    def macros(self):
+        return {"test_no_overlaps.sql": macros__test_no_overlaps_sql}
+
 
 @pytest.mark.usefixtures("project")
 class TestAllBasic(SelectBasicSetup):
@@ -105,8 +122,23 @@ class TestSelectBasic(SelectBasicSetup):
 
 class SelectConfiguredSetup:
     @pytest.fixture(scope="class")
-    def snapshots(self, snapshots_select_noconfig):  # noqa: F811
-        return snapshots_select_noconfig
+    def snapshots(self):
+        return {"snapshot.sql": snapshots_select_noconfig__snapshot_sql}
+
+    @pytest.fixture(scope="class")
+    def seeds(self):
+        return {"seed_newcol.csv": seeds__seed_newcol_csv, "seed.csv": seeds__seed_csv}
+
+    @pytest.fixture(scope="class")
+    def models(self):
+        return {
+            "schema.yml": models__schema_yml,
+            "ref_snapshot.sql": models__ref_snapshot_sql,
+        }
+
+    @pytest.fixture(scope="class")
+    def macros(self):
+        return {"test_no_overlaps.sql": macros__test_no_overlaps_sql}
 
     # TODO: don't have access to project here so this breaks
     @pytest.fixture(scope="class")

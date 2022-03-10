@@ -1,10 +1,13 @@
 import os
 import pytest
 from dbt.tests.util import run_dbt
-from tests.functional.simple_snapshot.fixtures import (  # noqa: F401
-    models,
-    seeds,
-    macros_custom_snapshot,
+from tests.functional.simple_snapshot.fixtures import (
+    models__schema_yml,
+    models__ref_snapshot_sql,
+    macros__test_no_overlaps_sql,
+    macros_custom_snapshot__custom_sql,
+    seeds__seed_newcol_csv,
+    seeds__seed_csv,
 )
 
 NUM_SNAPSHOT_MODELS = 1
@@ -34,8 +37,24 @@ def snapshots():
 
 
 @pytest.fixture(scope="class")
-def macros(macros_custom_snapshot):  # noqa: F811
-    return macros_custom_snapshot
+def macros():
+    return {
+        "test_no_overlaps.sql": macros__test_no_overlaps_sql,
+        "custom.sql": macros_custom_snapshot__custom_sql,
+    }
+
+
+@pytest.fixture(scope="class")
+def models():
+    return {
+        "schema.yml": models__schema_yml,
+        "ref_snapshot.sql": models__ref_snapshot_sql,
+    }
+
+
+@pytest.fixture(scope="class")
+def seeds():
+    return {"seed_newcol.csv": seeds__seed_newcol_csv, "seed.csv": seeds__seed_csv}
 
 
 def test_custom_snapshot_invalid_namespace(project):

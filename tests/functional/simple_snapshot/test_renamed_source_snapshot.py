@@ -1,6 +1,11 @@
 import pytest
 from dbt.tests.util import run_dbt
-from tests.functional.simple_snapshot.fixtures import seeds, macros_custom_snapshot  # noqa: F401
+from tests.functional.simple_snapshot.fixtures import (
+    seeds__seed_newcol_csv,
+    seeds__seed_csv,
+    macros__test_no_overlaps_sql,
+    macros_custom_snapshot__custom_sql,
+)
 
 
 snapshots_checkall__snapshot_sql = """
@@ -17,8 +22,16 @@ def snapshots():
 
 
 @pytest.fixture(scope="class")
-def macros(macros_custom_snapshot):  # noqa: F811
-    return macros_custom_snapshot
+def macros():
+    return {
+        "test_no_overlaps.sql": macros__test_no_overlaps_sql,
+        "custom.sql": macros_custom_snapshot__custom_sql,
+    }
+
+
+@pytest.fixture(scope="class")
+def seeds():
+    return {"seed_newcol.csv": seeds__seed_newcol_csv, "seed.csv": seeds__seed_csv}
 
 
 def test_renamed_source(project):

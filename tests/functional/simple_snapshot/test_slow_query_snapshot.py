@@ -1,8 +1,6 @@
 import pytest
 from dbt.tests.util import run_dbt
-from tests.functional.simple_snapshot.fixtures import (  # noqa: F401
-    models_slow,
-)
+from tests.functional.simple_snapshot.fixtures import models_slow__gen_sql
 
 snapshots_slow__snapshot_sql = """
 
@@ -57,8 +55,8 @@ where snap1.dbt_valid_to is null
 
 
 @pytest.fixture(scope="class")
-def models(models_slow):  # noqa: F811
-    return models_slow
+def models():
+    return {"gen.sql": models_slow__gen_sql}
 
 
 @pytest.fixture(scope="class")

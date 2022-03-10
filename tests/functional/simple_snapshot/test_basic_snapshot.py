@@ -5,13 +5,15 @@ import pytest
 from dbt.tests.util import run_dbt
 from dbt.tests.tables import TableComparison
 from tests.functional.simple_snapshot.fixtures import (  # noqa: F401
-    models,
-    seeds,
-    macros,
-    snapshots_pg,
-    macros_custom_snapshot,
-    snapshots_pg_custom_namespaced,
-    snapshots_pg_custom,
+    models__schema_yml,
+    models__ref_snapshot_sql,
+    seeds__seed_newcol_csv,
+    seeds__seed_csv,
+    snapshots_pg__snapshot_sql,
+    macros__test_no_overlaps_sql,
+    macros_custom_snapshot__custom_sql,
+    snapshots_pg_custom_namespaced__snapshot_sql,
+    snapshots_pg_custom__snapshot_sql,
 )
 
 snapshots_check_col__snapshot_sql = """
@@ -180,8 +182,23 @@ def basic_ref_two_snapshots(project):
 
 class Basic:
     @pytest.fixture(scope="class")
-    def snapshots(self, snapshots_pg):  # noqa: F811
-        return snapshots_pg
+    def snapshots(self):
+        return {"snapshot.sql": snapshots_pg__snapshot_sql}
+
+    @pytest.fixture(scope="class")
+    def models(self):
+        return {
+            "schema.yml": models__schema_yml,
+            "ref_snapshot.sql": models__ref_snapshot_sql,
+        }
+
+    @pytest.fixture(scope="class")
+    def macros(self):
+        return {"test_no_overlaps.sql": macros__test_no_overlaps_sql}
+
+    @pytest.fixture(scope="class")
+    def seeds(self):
+        return {"seed_newcol.csv": seeds__seed_newcol_csv, "seed.csv": seeds__seed_csv}
 
 
 @pytest.mark.usefixtures("project")
@@ -198,12 +215,26 @@ class TestBasicRef(Basic):
 
 class CustomNamespace:
     @pytest.fixture(scope="class")
-    def snapshots(self, snapshots_pg_custom_namespaced):  # noqa: F811
-        return snapshots_pg_custom_namespaced
+    def snapshots(self):
+        return {"snapshot.sql": snapshots_pg_custom_namespaced__snapshot_sql}
 
     @pytest.fixture(scope="class")
-    def macros(self, macros_custom_snapshot):  # noqa: F811
-        return macros_custom_snapshot
+    def macros(self):
+        return {
+            "test_no_overlaps.sql": macros__test_no_overlaps_sql,
+            "custom.sql": macros_custom_snapshot__custom_sql,
+        }
+
+    @pytest.fixture(scope="class")
+    def models(self):
+        return {
+            "schema.yml": models__schema_yml,
+            "ref_snapshot.sql": models__ref_snapshot_sql,
+        }
+
+    @pytest.fixture(scope="class")
+    def seeds(self):
+        return {"seed_newcol.csv": seeds__seed_newcol_csv, "seed.csv": seeds__seed_csv}
 
 
 @pytest.mark.usefixtures("project")
@@ -220,12 +251,26 @@ class TestRefCustomNamespace(CustomNamespace):
 
 class CustomSnapshot:
     @pytest.fixture(scope="class")
-    def snapshots(self, snapshots_pg_custom):  # noqa: F811
-        return snapshots_pg_custom
+    def snapshots(self):
+        return {"snapshot.sql": snapshots_pg_custom__snapshot_sql}
 
     @pytest.fixture(scope="class")
-    def macros(self, macros_custom_snapshot):  # noqa: F811
-        return macros_custom_snapshot
+    def macros(self):
+        return {
+            "test_no_overlaps.sql": macros__test_no_overlaps_sql,
+            "custom.sql": macros_custom_snapshot__custom_sql,
+        }
+
+    @pytest.fixture(scope="class")
+    def models(self):
+        return {
+            "schema.yml": models__schema_yml,
+            "ref_snapshot.sql": models__ref_snapshot_sql,
+        }
+
+    @pytest.fixture(scope="class")
+    def seeds(self):
+        return {"seed_newcol.csv": seeds__seed_newcol_csv, "seed.csv": seeds__seed_csv}
 
 
 @pytest.mark.usefixtures("project")
@@ -245,6 +290,21 @@ class CheckCols:
     def snapshots(self):
         return {"snapshot.sql": snapshots_check_col__snapshot_sql}
 
+    @pytest.fixture(scope="class")
+    def models(self):
+        return {
+            "schema.yml": models__schema_yml,
+            "ref_snapshot.sql": models__ref_snapshot_sql,
+        }
+
+    @pytest.fixture(scope="class")
+    def macros(self):
+        return {"test_no_overlaps.sql": macros__test_no_overlaps_sql}
+
+    @pytest.fixture(scope="class")
+    def seeds(self):
+        return {"seed_newcol.csv": seeds__seed_newcol_csv, "seed.csv": seeds__seed_csv}
+
 
 @pytest.mark.usefixtures("project")
 class TestBasicCheckCols(CheckCols):
@@ -262,6 +322,21 @@ class ConfiguredCheckCols:
     @pytest.fixture(scope="class")
     def snapshots(self):
         return {"snapshot.sql": snapshots_check_col_noconfig__snapshot_sql}
+
+    @pytest.fixture(scope="class")
+    def models(self):
+        return {
+            "schema.yml": models__schema_yml,
+            "ref_snapshot.sql": models__ref_snapshot_sql,
+        }
+
+    @pytest.fixture(scope="class")
+    def macros(self):
+        return {"test_no_overlaps.sql": macros__test_no_overlaps_sql}
+
+    @pytest.fixture(scope="class")
+    def seeds(self):
+        return {"seed_newcol.csv": seeds__seed_newcol_csv, "seed.csv": seeds__seed_csv}
 
     @pytest.fixture(scope="class")
     def project_config_update(self):
@@ -294,6 +369,21 @@ class UpdatedAtCheckCols:
     @pytest.fixture(scope="class")
     def snapshots(self):
         return {"snapshot.sql": snapshots_check_col_noconfig__snapshot_sql}
+
+    @pytest.fixture(scope="class")
+    def models(self):
+        return {
+            "schema.yml": models__schema_yml,
+            "ref_snapshot.sql": models__ref_snapshot_sql,
+        }
+
+    @pytest.fixture(scope="class")
+    def macros(self):
+        return {"test_no_overlaps.sql": macros__test_no_overlaps_sql}
+
+    @pytest.fixture(scope="class")
+    def seeds(self):
+        return {"seed_newcol.csv": seeds__seed_newcol_csv, "seed.csv": seeds__seed_csv}
 
     @pytest.fixture(scope="class")
     def project_config_update(self):
