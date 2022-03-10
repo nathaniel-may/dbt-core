@@ -4,7 +4,7 @@ import pytz
 import pytest
 from dbt.tests.util import run_dbt
 from dbt.tests.tables import TableComparison
-from tests.functional.simple_snapshot.fixtures import (  # noqa: F401
+from tests.functional.simple_snapshot.fixtures import (
     models__schema_yml,
     models__ref_snapshot_sql,
     seeds__seed_newcol_csv,
@@ -127,7 +127,6 @@ def snapshot_setup(project, NUM_SNAPSHOT_MODELS, table_comp):
 
 
 def ref_setup(project, NUM_SNAPSHOT_MODELS):
-
     path = os.path.join(project.test_data_dir, "seed_pg.sql")
     project.run_sql_file(path)
     results = run_dbt(["snapshot"])
@@ -138,7 +137,6 @@ def ref_setup(project, NUM_SNAPSHOT_MODELS):
 
 
 # these fixtures are slight variations of each other for the basic snapshot tests run
-@pytest.fixture
 def basic_snapshot(project):
     NUM_SNAPSHOT_MODELS = 1
     table_comp = TableComparison(
@@ -148,7 +146,6 @@ def basic_snapshot(project):
     snapshot_setup(project, NUM_SNAPSHOT_MODELS, table_comp)
 
 
-@pytest.fixture
 def check_cols_snapshot(project):
     NUM_SNAPSHOT_MODELS = 2
     table_comp = OverrideTableComparison_dbt(
@@ -158,7 +155,6 @@ def check_cols_snapshot(project):
     snapshot_setup(project, NUM_SNAPSHOT_MODELS, table_comp)
 
 
-@pytest.fixture
 def revived_snapshot(project):
     NUM_SNAPSHOT_MODELS = 2
     table_comp = RevivedTableComparison(
@@ -168,13 +164,11 @@ def revived_snapshot(project):
     snapshot_setup(project, NUM_SNAPSHOT_MODELS, table_comp)
 
 
-@pytest.fixture
 def basic_ref(project):
     NUM_SNAPSHOT_MODELS = 1
     ref_setup(project, NUM_SNAPSHOT_MODELS)
 
 
-@pytest.fixture
 def basic_ref_two_snapshots(project):
     NUM_SNAPSHOT_MODELS = 2
     ref_setup(project, NUM_SNAPSHOT_MODELS)
@@ -201,16 +195,14 @@ class Basic:
         return {"seed_newcol.csv": seeds__seed_newcol_csv, "seed.csv": seeds__seed_csv}
 
 
-@pytest.mark.usefixtures("project")
 class TestBasicSnapshot(Basic):
-    def test_basic_snapshot(project, basic_snapshot):
-        basic_snapshot
+    def test_basic_snapshot(self, project):
+        basic_snapshot(project)
 
 
-@pytest.mark.usefixtures("project")
 class TestBasicRef(Basic):
-    def test_basic_ref(project, basic_ref):
-        basic_ref
+    def test_basic_ref(self, project):
+        basic_ref(project)
 
 
 class CustomNamespace:
@@ -237,16 +229,14 @@ class CustomNamespace:
         return {"seed_newcol.csv": seeds__seed_newcol_csv, "seed.csv": seeds__seed_csv}
 
 
-@pytest.mark.usefixtures("project")
 class TestBasicCustomNamespace(CustomNamespace):
-    def test_basic_snapshot(project, basic_snapshot):
-        basic_snapshot
+    def test_custom_namespace_snapshot(self, project):
+        basic_snapshot(project)
 
 
-@pytest.mark.usefixtures("project")
 class TestRefCustomNamespace(CustomNamespace):
-    def test_basic_ref(project, basic_ref):
-        basic_ref
+    def test_custom_namespace_ref(self, project):
+        basic_ref(project)
 
 
 class CustomSnapshot:
@@ -273,16 +263,14 @@ class CustomSnapshot:
         return {"seed_newcol.csv": seeds__seed_newcol_csv, "seed.csv": seeds__seed_csv}
 
 
-@pytest.mark.usefixtures("project")
 class TestBasicCustomSnapshot(CustomSnapshot):
-    def test_basic_snapshot(project, basic_snapshot):
-        basic_snapshot
+    def test_custom_snapshot(self, project):
+        basic_snapshot(project)
 
 
-@pytest.mark.usefixtures("project")
 class TestRefCustomSnapshot(CustomSnapshot):
-    def test_basic_ref(project, basic_ref):
-        basic_ref
+    def test_custom_ref(self, project):
+        basic_ref(project)
 
 
 class CheckCols:
@@ -306,16 +294,14 @@ class CheckCols:
         return {"seed_newcol.csv": seeds__seed_newcol_csv, "seed.csv": seeds__seed_csv}
 
 
-@pytest.mark.usefixtures("project")
 class TestBasicCheckCols(CheckCols):
-    def test_basic_snapshot(project, check_cols_snapshot):
-        check_cols_snapshot
+    def test_basic_snapshot(self, project):
+        check_cols_snapshot(project)
 
 
-@pytest.mark.usefixtures("project")
 class TestRefCheckCols(CheckCols):
-    def test_basic_ref(project, basic_ref_two_snapshots):
-        basic_ref_two_snapshots
+    def test_check_cols_ref(self, project):
+        basic_ref_two_snapshots(project)
 
 
 class ConfiguredCheckCols:
@@ -353,16 +339,14 @@ class ConfiguredCheckCols:
         return snapshot_config
 
 
-@pytest.mark.usefixtures("project")
 class TestBasicConfiguredCheckCols(ConfiguredCheckCols):
-    def test_basic_snapshot(project, check_cols_snapshot):
-        check_cols_snapshot
+    def test_configured_snapshot(self, project):
+        check_cols_snapshot(project)
 
 
-@pytest.mark.usefixtures("project")
 class TestRefConfiguredCheckCols(ConfiguredCheckCols):
-    def test_basic_ref(project, basic_ref_two_snapshots):
-        basic_ref_two_snapshots
+    def test_configured_ref(self, project):
+        basic_ref_two_snapshots(project)
 
 
 class UpdatedAtCheckCols:
@@ -401,13 +385,11 @@ class UpdatedAtCheckCols:
         return snapshot_config
 
 
-@pytest.mark.usefixtures("project")
 class TestBasicUpdatedAtCheckCols(UpdatedAtCheckCols):
-    def test_basic_snapshot(project, revived_snapshot):
-        revived_snapshot
+    def test_updated_at_snapshot(self, project):
+        revived_snapshot(project)
 
 
-@pytest.mark.usefixtures("project")
 class TestRefUpdatedAtCheckCols(UpdatedAtCheckCols):
-    def test_basic_ref(project, basic_ref_two_snapshots):
-        basic_ref_two_snapshots
+    def test_updated_at_ref(self, project):
+        basic_ref_two_snapshots(project)

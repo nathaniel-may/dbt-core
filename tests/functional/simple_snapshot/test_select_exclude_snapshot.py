@@ -14,7 +14,6 @@ from tests.functional.simple_snapshot.fixtures import (
 )
 
 
-@pytest.fixture
 def all_snapshots(project):
     path = os.path.join(project.test_data_dir, "seed_pg.sql")
     project.run_sql_file(path)
@@ -44,7 +43,6 @@ def all_snapshots(project):
     table_comp.assert_tables_equal("snapshot_actual", "snapshot_expected")
 
 
-@pytest.fixture
 def exclude_snapshots(project):
     path = os.path.join(project.test_data_dir, "seed_pg.sql")
     project.run_sql_file(path)
@@ -60,7 +58,6 @@ def exclude_snapshots(project):
     table_comp.assert_tables_equal("snapshot_actual", "snapshot_expected")
 
 
-@pytest.fixture
 def select_snapshots(project):
     path = os.path.join(project.test_data_dir, "seed_pg.sql")
     project.run_sql_file(path)
@@ -102,22 +99,19 @@ class SelectBasicSetup:
         return {"test_no_overlaps.sql": macros__test_no_overlaps_sql}
 
 
-@pytest.mark.usefixtures("project")
 class TestAllBasic(SelectBasicSetup):
-    def test_all_snapshots(project, all_snapshots):
-        all_snapshots
+    def test_all_snapshots(self, project):
+        all_snapshots(project)
 
 
-@pytest.mark.usefixtures("project")
 class TestExcludeBasic(SelectBasicSetup):
-    def test_exclude_snapshots(project, exclude_snapshots):
-        exclude_snapshots
+    def test_exclude_snapshots(self, project):
+        exclude_snapshots(project)
 
 
-@pytest.mark.usefixtures("project")
 class TestSelectBasic(SelectBasicSetup):
-    def test_select_snapshots(project, select_snapshots):
-        select_snapshots
+    def test_select_snapshots(self, project):
+        select_snapshots(project)
 
 
 class SelectConfiguredSetup:
@@ -156,19 +150,16 @@ class SelectConfiguredSetup:
         return snapshot_config
 
 
-@pytest.mark.usefixtures("project")
 class TestConfigured(SelectConfiguredSetup):
-    def test_all_snapshots(project, all_snapshots):
-        all_snapshots
+    def test_all_configured_snapshots(self, project):
+        all_snapshots(project)
 
 
-@pytest.mark.usefixtures("project")
 class TestConfiguredExclude(SelectConfiguredSetup):
-    def test_exclude_snapshots(project, exclude_snapshots):
-        exclude_snapshots
+    def test_exclude_configured_snapshots(self, project):
+        exclude_snapshots(project)
 
 
-@pytest.mark.usefixtures("project")
 class TestConfiguredSelect(SelectConfiguredSetup):
-    def test_select_snapshots(project, select_snapshots):
-        select_snapshots
+    def test_select_configured_snapshots(self, project):
+        select_snapshots(project)
