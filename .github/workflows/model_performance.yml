@@ -184,7 +184,7 @@ jobs:
     # depends on `model` as a separate job so that the baseline can be committed to more than one branch
     # i.e. release branch and main
     needs: [model]
-    name: Model a release
+    name: Commit To Release Branch (if specified)
     runs-on: ubuntu-latest
     steps:
 
@@ -214,7 +214,7 @@ jobs:
     # depends on `model` as a separate job so that the baseline can be committed to more than one branch
     # i.e. release branch and main
     needs: [model]
-    name: Model a release
+    name: Commit To Main (if specified)
     runs-on: ubuntu-latest
     steps:
 
