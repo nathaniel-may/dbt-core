@@ -88,7 +88,8 @@ jobs:
           # we have to update this code. example: 1.0.0 -> 1.0.latest. the sed command takes into
           # account multiple digits like 1.0.999 -> 1.0.latest
           
-          no_patch=$(sed "s|\(.*\)\..*|\1|" <<< ${{ steps.variables.outputs.release_id }})
+          release_id=${{ steps.variables.outputs.release_id }}
+          no_patch=$(sed "s|\(.*\)\..*|\1|" <<< $release_id)
           branch_name="${no_patch}.latest"
           echo "::set-output name=release_branch::$branch_name"
           echo "release branch is inferred to be ${branch_name}"
