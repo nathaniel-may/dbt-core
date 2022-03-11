@@ -29,7 +29,7 @@ on:
         default: 9.9.9
         required: true
       commit_results:
-        description: commit results directly to the release branch and main when finished? (true/false)
+        description: commit results to main and release branch (inferred from provided version) (true/false)
         default: 'false'
         required: true
 
