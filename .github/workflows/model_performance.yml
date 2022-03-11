@@ -22,6 +22,8 @@ on:
   # run manually from the actions tab
   workflow_dispatch:
     inputs:
+      # if we ever want to model pre-releases, we would need to handle pre-release version numbers
+      # here and in the runner. Even if we use a semver library I suspect it will be rather difficult.
       release_id:
         description: dbt version to model (must be non-prerelease in Pypi) (^^ always run from main)
         default: 9.9.9
@@ -30,6 +32,11 @@ on:
         description: commit results directly to the above branch when finished? (true/false)
         default: 'false'
         required: true
+      # this is necessary because the branch drop down for workflow dispatch is where to get the workflow file from
+      # which will not be up-to-date in release branches. Run from main, specify release branch.
+      release_branch:
+        description: if committing, this is the name of the release branch (e.g. "1.0.latest"). If blank, will only commit to main.
+        required: false
 
 env:
   RUNNER_CACHE_PATH: performance/runner/target/release/runner
@@ -48,6 +55,7 @@ jobs:
       cache_key: ${{ steps.variables.outputs.cache_key }}
       release_id: ${{ steps.variables.outputs.release_id }}
       commit: ${{ steps.variables.outputs.commit }}
+      release_branch: ${{ steps.variables.outputs.release_branch }}
     steps:
 
       # explicitly checkout the performance runner from main regardless of which
@@ -70,6 +78,7 @@ jobs:
             echo "Workflow dispatch event detected"
             echo "::set-output name=release_id::${{github.event.inputs.release_id}}"
             echo "::set-output name=commit::${{github.event.inputs.commit_results}}"
+            echo "::set-output name=release_branch::${{ steps.variables.outputs.release_branch }}"
           # release.tag_name has a v prepended. we must remove it.
           else
             echo "release event detected"
@@ -77,6 +86,7 @@ jobs:
             without_v=${with_v:1}
             echo "::set-output name=release_id::$without_v"
             echo "::set-output name=commit::true"
+            # TODO how do we get the branch name the release was released from???
           fi
 
       # TODO make sure this works when you're not running on main
@@ -175,7 +185,7 @@ jobs:
           path: perforamnce/baselines/${{ needs.latest-runner.outputs.release_id }}
 
   commit-release-branch:
-    if: ${{ needs.latest-runner.outputs.commit }} && $GITHUB_HEAD_REF != 'main'
+    if: ${{ needs.latest-runner.outputs.commit }} && ${{ needs.latest-runner.outputs.release_branch }} && ${{ needs.latest-runner.outputs.release_branch }} != 'main'
     # depends on `model` as a separate job so that the baseline can be committed to more than one branch
     # i.e. release branch and main
     needs: [model]
@@ -187,7 +197,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          ref: $GITHUB_HEAD_REF
+          ref: ${{ needs.latest-runner.outputs.cache_key }}
       
       - uses: actions/download-artifact@v3
         with:
