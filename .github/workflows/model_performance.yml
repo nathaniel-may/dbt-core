@@ -68,9 +68,12 @@ jobs:
           # next job would have to checkout from main an hash the files itself.
           echo "::set-output name=cache_key::${{ runner.os }}-${{ hashFiles('performance/runner/Cargo.toml')}}-${{ hashFiles('performance/runner/src/*') }}"
 
+          # this value gets used to create other values locally so it gets a local definition too.
+          local_release_id=''
           # users are prompted to input with the correct format
           if [[ $GITHUB_EVENT_NAME == "workflow_dispatch" ]]; then
             echo "Workflow dispatch event detected"
+            local_release_id=${{github.event.inputs.release_id}}
             echo "::set-output name=release_id::${{github.event.inputs.release_id}}"
             echo "::set-output name=commit::${{github.event.inputs.commit_results}}"
           # release.tag_name has a v prepended. we must remove it.
@@ -78,6 +81,7 @@ jobs:
             echo "release event detected"
             with_v=${{github.event.release.tag_name}}
             without_v=${with_v:1}
+            local_release_id=$without_v
             echo "::set-output name=release_id::$without_v"
             echo "::set-output name=commit::true"
             # TODO how do we get the branch name the release was released from???
@@ -88,8 +92,7 @@ jobs:
           # we have to update this code. example: 1.0.0 -> 1.0.latest. the sed command takes into
           # account multiple digits like 1.0.999 -> 1.0.latest
           
-          release_id=${{ steps.variables.outputs.release_id }}
-          no_patch=$(sed "s|\(.*\)\..*|\1|" <<< $release_id)
+          no_patch=$(sed "s|\(.*\)\..*|\1|" <<< $local_release_id)
           branch_name="${no_patch}.latest"
           echo "::set-output name=release_branch::$branch_name"
           echo "release branch is inferred to be ${branch_name}"
