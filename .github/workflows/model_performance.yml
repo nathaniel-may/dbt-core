@@ -84,7 +84,6 @@ jobs:
             local_release_id=$without_v
             echo "::set-output name=release_id::$without_v"
             echo "::set-output name=commit::true"
-            # TODO how do we get the branch name the release was released from???
           fi
 
           # string manipulation to get the branch name. It can't be discovered from the github api
