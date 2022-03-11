@@ -193,7 +193,7 @@ jobs:
           path: performance/baselines/${{ needs.latest-runner.outputs.release_id }}/
 
   commit-release-branch:
-    if: ${{ needs.latest-runner.outputs.commit }} && ${{ needs.latest-runner.outputs.release_branch }} && ${{ needs.latest-runner.outputs.release_branch }} != 'main'
+    if: ${{ needs.latest-runner.outputs.commit }} == 'true' && ${{ needs.latest-runner.outputs.release_branch }} != 'main'
     # depends on `model` as a separate job so that the baseline can be committed to more than one branch
     # i.e. release branch and main
     needs: [model]
@@ -214,7 +214,6 @@ jobs:
 
       - name: Commit Baseline
         uses: EndBug/add-and-commit@v8
-        if: ${{ needs.latest-runner.outputs.commit == 'true' }}
         with:
           add: ${{ github.workspace }}/performance/baselines
           author_name: 'Github Build Bot'
@@ -223,7 +222,7 @@ jobs:
           message: 'adding performance baseline for ${{ needs.latest-runner.outputs.release_id }}'
 
   commit-main-branch:
-    if: ${{ needs.latest-runner.outputs.commit }}
+    if: ${{ needs.latest-runner.outputs.commit == 'true' }}
     # depends on `model` as a separate job so that the baseline can be committed to more than one branch
     # i.e. release branch and main
     needs: [model]
@@ -244,7 +243,6 @@ jobs:
 
       - name: Commit Baseline
         uses: EndBug/add-and-commit@v8
-        if: ${{ needs.latest-runner.outputs.commit == 'true' }}
         with:
           add: ${{ github.workspace }}/performance/baselines
           author_name: 'Github Build Bot'
