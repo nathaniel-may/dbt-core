@@ -215,6 +215,7 @@ jobs:
       - name: '[DEBUG] ls baselines after artifact download'
         run: ls performance/baselines/
 
+        # TODO This actually pushes to main.
       - name: Commit Baseline
         uses: EndBug/add-and-commit@v8
         with:
