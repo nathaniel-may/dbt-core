@@ -89,7 +89,7 @@ jobs:
           # account multiple digits like 1.0.999 -> 1.0.latest
           
           no_patch=echo ${{ steps.variables.outputs.release_id }} | sed 's|\(.*\)\..*|\1|'
-          branch_name="${no_path}.latest"
+          branch_name="${no_patch}.latest"
           echo "::set-output name=release_branch::$branch_name"
           echo "release branch is inferred to be ${branch_name}"
 
