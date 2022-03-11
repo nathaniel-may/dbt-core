@@ -89,11 +89,6 @@ jobs:
             # TODO how do we get the branch name the release was released from???
           fi
 
-      # TODO make sure this works when you're not running on main
-      - name: Debug Message About Committing
-        if: ${{ steps.variables.outputs.commit }}
-        run: if ${{ $GITHUB_HEAD_REF == 'main' }}; then echo "because this action was fired on main, it will only commit to main branch at the end"; else echo "will commit to both this branch and main at the end."; fi
-
       # attempts to access a previously cached runner
       - uses: actions/cache@v2
         id: cache
