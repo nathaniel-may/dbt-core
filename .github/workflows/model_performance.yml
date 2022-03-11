@@ -210,7 +210,10 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: baseline
-          path: perforamnce/baselines/${{ needs.latest-runner.outputs.release_id }}
+          path: performance/baselines/${{ needs.latest-runner.outputs.release_id }}
+
+      - name: '[DEBUG] ls baselines after artifact download'
+        run: ls performance/baselines/
 
       - name: Commit Baseline
         uses: EndBug/add-and-commit@v8
@@ -239,7 +242,10 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: baseline
-          path: perforamnce/baselines/${{ needs.latest-runner.outputs.release_id }}
+          path: performance/baselines/${{ needs.latest-runner.outputs.release_id }}
+
+      - name: '[DEBUG] ls baselines after artifact download'
+        run: ls performance/baselines/
 
       - name: Commit Baseline
         uses: EndBug/add-and-commit@v8
