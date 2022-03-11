@@ -162,6 +162,7 @@ jobs:
         run: chmod +x ./performance/app
 
       # `${{ github.workspace }}` is used to pass the absolute path
+      # TODO CHANGE NUMBER OF RUNS BEFORE MERGING
       - name: Run Measurement
         run: mkdir ${{ github.workspace }}/performance/tmp/ && mkdir -p perforamnce/baselines/${{ steps.variables.outputs.release_id }}/ && ls -F && performance/app model -v ${{ steps.variables.outputs.release_id }} -b ${{ github.workspace }}/performance/baselines/ -p ${{ github.workspace }}/performance/projects/ -t ${{ github.workspace }}/performance/tmp/ -n 2
 
