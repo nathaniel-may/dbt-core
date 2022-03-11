@@ -205,7 +205,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          ref: ${{ needs.latest-runner.outputs.cache_key }}
+          ref: ${{ needs.latest-runner.outputs.release_branch }}
       
       - uses: actions/download-artifact@v3
         with:
