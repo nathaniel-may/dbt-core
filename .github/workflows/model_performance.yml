@@ -25,11 +25,11 @@ on:
       # if we ever want to model pre-releases, we would need to handle pre-release version numbers
       # here and in the runner. Even if we use a semver library I suspect it will be rather difficult.
       release_id:
-        description: dbt version to model (must be non-prerelease in Pypi) (^^ always run from main)
+        description: '(^^ always run from main)\ndbt version to model (must be non-prerelease in Pypi)'
         default: 9.9.9
         required: true
       commit_results:
-        description: commit results directly to the above branch when finished? (true/false)
+        description: commit results directly to the below branch and main when finished? (true/false)
         default: 'false'
         required: true
       # this is necessary because the branch drop down for workflow dispatch is where to get the workflow file from
