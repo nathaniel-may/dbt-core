@@ -166,15 +166,6 @@ jobs:
       - name: Run Measurement
         run: mkdir ${{ github.workspace }}/performance/tmp/ && mkdir -p perforamnce/baselines/${{ steps.variables.outputs.release_id }}/ && ls -F && performance/app model -v ${{ steps.variables.outputs.release_id }} -b ${{ github.workspace }}/performance/baselines/ -p ${{ github.workspace }}/performance/projects/ -t ${{ github.workspace }}/performance/tmp/ -n 2
 
-      # - name: Commit Baseline
-      #   uses: EndBug/add-and-commit@v8
-      #   if: ${{ steps.variables.outputs.commit == 'true' }}
-      #   with:
-      #     add: ${{ github.workspace }}/performance/baselines
-      #     author_name: 'Github Build Bot'
-      #     author_email: 'buildbot@fishtownanalytics.com'
-      #     message: 'adding performance baseline for ${{ steps.variables.outputs.release_id }}'
-
       - name: Commit Baseline
         uses: EndBug/add-and-commit@v8
         if: ${{ steps.variables.outputs.commit == 'true' }}
@@ -182,4 +173,5 @@ jobs:
           add: ${{ github.workspace }}/performance/baselines
           author_name: 'Github Build Bot'
           author_email: 'bot@nathanielmay.com'
+          # author_email: 'buildbot@fishtownanalytics.com'
           message: 'adding performance baseline for ${{ steps.variables.outputs.release_id }}'
