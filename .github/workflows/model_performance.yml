@@ -45,7 +45,9 @@ jobs:
     env:
       RUSTFLAGS: "-D warnings"
     outputs:
-      cacheKey: ${{ steps.cacheKey.outputs.key }}
+      cache_key: ${{ steps.variables.outputs.cache_key }}
+      release_id: ${{ steps.variables.outputs.release_id }}
+      commit: ${{ steps.variables.outputs.commit }}
     steps:
 
       # explicitly checkout the performance runner from main regardless of which
@@ -55,19 +57,39 @@ jobs:
         with:
           ref: main
 
-      # create a cache key that will be used in the next job. without this the
-      # next job would have to checkout from main an hash the files itself.
-      - name: Create Cache Key
-        id: cacheKey
-        run: echo "::set-output name=key::${{ runner.os }}-${{ hashFiles('performance/runner/Cargo.toml')}}-${{ hashFiles('performance/runner/src/*') }}"
+      # collect all the variables that need to be used in subsequent jobs
+      - name: Set Variables
+        id: variables
+        run: |
+          # create a cache key that will be used in the next job. without this the
+          # next job would have to checkout from main an hash the files itself.
+          echo "::set-output name=cache_key::${{ runner.os }}-${{ hashFiles('performance/runner/Cargo.toml')}}-${{ hashFiles('performance/runner/src/*') }}"
+          
+          # users are prompted to input with the correct format
+          if [[ $GITHUB_EVENT_NAME == "workflow_dispatch" ]]; then
+            echo "Workflow dispatch event detected"
+            echo "::set-output name=release_id::${{github.event.inputs.release_id}}"
+            echo "::set-output name=commit::${{github.event.inputs.commit_results}}"
+          # release.tag_name has a v prepended. we must remove it.
+          else
+            echo "release event detected"
+            with_v=${{github.event.release.tag_name}}
+            without_v=${with_v:1}
+            echo "::set-output name=release_id::$without_v"
+            echo "::set-output name=commit::true"
+          fi
+
+      # TODO make sure this works when you're not running on main
+      - name: Debug Message About Committing
+        if: ${{ steps.variables.outputs.commit }}
+        run: if ${{ $GITHUB_HEAD_REF == 'main' }}; then echo "because this action was fired on main, it will only commit to main branch at the end"; else echo "will commit to both this branch and main at the end."; fi
 
       # attempts to access a previously cached runner
       - uses: actions/cache@v2
         id: cache
         with:
           path: ${{ env.RUNNER_CACHE_PATH }}
-          # TODO this doesn't exist because it was created in the previous job.
-          key: ${{ steps.cacheKey.outputs.key }}
+          key: ${{ steps.variables.outputs.cache_key }}
 
       - name: Fetch Rust Toolchain
         if: steps.cache.outputs.cache-hit != 'true'
@@ -103,32 +125,12 @@ jobs:
           args: --release --manifest-path performance/runner/Cargo.toml
       # the cache action automatically caches this binary at the end of the job
 
-  # run the performance measurements on the current or default branch
-  # TODO get the version from pypi instead
   model:
     # depends on `latest-runner` as a separate job so that failures in this job do not prevent
     # a successfully tested and built binary from being cached.
     needs: [latest-runner]
     name: Model a release
     runs-on: ubuntu-latest
-    steps:
-      - name: Set Release Id and Commit Flag
-        id: variables
-        run: |
-          echo $GITHUB_EVENT_NAME
-          # users are prompted to input with the correct format
-          if [[ $GITHUB_EVENT_NAME == "workflow_dispatch" ]]; then
-            echo "Workflow dispatch event detected"
-            echo "::set-output name=release_id::${{github.event.inputs.release_id}}"
-            echo "::set-output name=commit::${{github.event.inputs.commit_results}}"
-          # release.tag_name has a v prepended. we must remove it.
-          else
-            echo "release event detected"
-            with_v=${{github.event.release.tag_name}}
-            without_v=${with_v:1}
-            echo "::set-output name=release_id::$without_v"
-            echo "::set-output name=commit::true"
-          fi
 
       - name: Setup Python
         uses: actions/setup-python@v2.2.2
@@ -136,7 +138,7 @@ jobs:
           python-version: "3.8"
 
       - name: Install dbt
-        run: pip install dbt-postgres==${{ steps.variables.outputs.release_id }}
+        run: pip install dbt-postgres==${{ needs.latest-runner.outputs.release_id }}
 
       - name: Install Hyperfine
         run: wget https://github.com/sharkdp/hyperfine/releases/download/v1.11.0/hyperfine_1.11.0_amd64.deb && sudo dpkg -i hyperfine_1.11.0_amd64.deb
@@ -153,7 +155,7 @@ jobs:
         id: cache
         with:
           path: ${{ env.RUNNER_CACHE_PATH }}
-          key: ${{ needs.latest-runner.outputs.cacheKey }}
+          key: ${{ needs.latest-runner.outputs.cache_key }}
 
       - name: Move Runner
         run: mv performance/runner/target/release/runner performance/app
@@ -164,14 +166,69 @@ jobs:
       # `${{ github.workspace }}` is used to pass the absolute path
       # TODO CHANGE NUMBER OF RUNS BEFORE MERGING
       - name: Run Measurement
-        run: mkdir ${{ github.workspace }}/performance/tmp/ && mkdir -p perforamnce/baselines/${{ steps.variables.outputs.release_id }}/ && ls -F && performance/app model -v ${{ steps.variables.outputs.release_id }} -b ${{ github.workspace }}/performance/baselines/ -p ${{ github.workspace }}/performance/projects/ -t ${{ github.workspace }}/performance/tmp/ -n 2
+        run: mkdir ${{ github.workspace }}/performance/tmp/ && mkdir -p perforamnce/baselines/${{ needs.latest-runner.outputs.release_id }}/ && ls -F && performance/app model -v ${{ needs.latest-runner.outputs.release_id }} -b ${{ github.workspace }}/performance/baselines/ -p ${{ github.workspace }}/performance/projects/ -t ${{ github.workspace }}/performance/tmp/ -n 2
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: baseline
+          path: perforamnce/baselines/${{ needs.latest-runner.outputs.release_id }}
+
+  commit-release-branch:
+    if: ${{ needs.latest-runner.outputs.commit }} && $GITHUB_HEAD_REF != 'main'
+    # depends on `model` as a separate job so that the baseline can be committed to more than one branch
+    # i.e. release branch and main
+    needs: [model]
+    name: Model a release
+    runs-on: ubuntu-latest
+    steps:
+
+      # explicitly checkout the branch specified during dispatch 
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: $GITHUB_HEAD_REF
+      
+      - uses: actions/download-artifact@v3
+        with:
+          name: baseline
+          path: perforamnce/baselines/${{ needs.latest-runner.outputs.release_id }}
 
       - name: Commit Baseline
         uses: EndBug/add-and-commit@v8
-        if: ${{ steps.variables.outputs.commit == 'true' }}
+        if: ${{ needs.latest-runner.outputs.commit == 'true' }}
         with:
           add: ${{ github.workspace }}/performance/baselines
           author_name: 'Github Build Bot'
           author_email: 'bot@nathanielmay.com'
           # author_email: 'buildbot@fishtownanalytics.com'
-          message: 'adding performance baseline for ${{ steps.variables.outputs.release_id }}'
+          message: 'adding performance baseline for ${{ needs.latest-runner.outputs.release_id }}'
+
+  commit-main-branch:
+    if: ${{ needs.latest-runner.outputs.commit }}
+    # depends on `model` as a separate job so that the baseline can be committed to more than one branch
+    # i.e. release branch and main
+    needs: [model]
+    name: Model a release
+    runs-on: ubuntu-latest
+    steps:
+
+      # explicitly checkout main 
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: main
+      
+      - uses: actions/download-artifact@v3
+        with:
+          name: baseline
+          path: perforamnce/baselines/${{ needs.latest-runner.outputs.release_id }}
+
+      - name: Commit Baseline
+        uses: EndBug/add-and-commit@v8
+        if: ${{ needs.latest-runner.outputs.commit == 'true' }}
+        with:
+          add: ${{ github.workspace }}/performance/baselines
+          author_name: 'Github Build Bot'
+          author_email: 'bot@nathanielmay.com'
+          # author_email: 'buildbot@fishtownanalytics.com'
+          message: 'adding performance baseline for ${{ needs.latest-runner.outputs.release_id }}'
