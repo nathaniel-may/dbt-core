@@ -47,7 +47,7 @@ permissions:
 
 jobs:
   latest-runner:
-    name: Build or Fetch Performance Runner
+    name: Build or Fetch Runner
     runs-on: ubuntu-latest
     env:
       RUSTFLAGS: "-D warnings"
