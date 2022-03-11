@@ -183,7 +183,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: baseline
-          path: perforamnce/baselines/${{ needs.latest-runner.outputs.release_id }}
+          path: performance/baselines/${{ needs.latest-runner.outputs.release_id }}/
 
   commit-release-branch:
     if: ${{ needs.latest-runner.outputs.commit }} && ${{ needs.latest-runner.outputs.release_branch }} && ${{ needs.latest-runner.outputs.release_branch }} != 'main'
