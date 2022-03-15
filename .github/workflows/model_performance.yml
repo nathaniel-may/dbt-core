@@ -240,8 +240,8 @@ jobs:
           author_name: 'Github Build Bot'
           author_email: 'buildbot@fishtownanalytics.com'
           message: 'adding performance baseline for ${{ needs.latest-runner.outputs.release_id }}'
-          new_branch: 'performance-bot/release_${{steps.variables.outputs.release_id}}_${{GITHUB.RUN_ID}}'
-          push: '--set-upstream origin performance-bot/release_${{steps.variables.outputs.release_id}}_${{GITHUB.RUN_ID}}'
+          new_branch: 'performance-bot/release_${{needs.latest-runner.outputs.release_id}}_${{GITHUB.RUN_ID}}'
+          push: '--set-upstream origin performance-bot/release_${{needs.latest-runner.outputs.release_id}}_${{GITHUB.RUN_ID}}'
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
@@ -249,8 +249,8 @@ jobs:
           author: 'Github Build Bot <buildbot@fishtownanalytics.com>'
           draft: true
           base: ${{ needs.latest-runner.outputs.release_branch }}
-          title: 'Adding performance modeling for ${{steps.variables.outputs.release_id}}'
-          branch: 'performance-bot/main_${{steps.variables.outputs.release_id}}_${{GITHUB.RUN_ID}}'
+          title: 'Adding performance modeling for ${{needs.latest-runner.outputs.release_id}}'
+          branch: 'performance-bot/main_${{needs.latest-runner.outputs.release_id}}_${{GITHUB.RUN_ID}}'
 
 
   pr-main-branch:
