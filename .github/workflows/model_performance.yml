@@ -223,7 +223,7 @@ jobs:
           author_name: 'Github Build Bot'
           author_email: 'buildbot@fishtownanalytics.com'
           message: 'adding performance baseline for ${{ needs.latest-runner.outputs.release_id }}'
-          branch: 'performance-bot/release_${{steps.variables.outputs.release_id}}_${{GITHUB.RUN_ID}}'
+          new_branch: 'performance-bot/release_${{steps.variables.outputs.release_id}}_${{GITHUB.RUN_ID}}'
           push: 'origin origin/performance-bot/release_${{steps.variables.outputs.release_id}}_${{GITHUB.RUN_ID}}'
 
       - name: Create Pull Request
@@ -266,7 +266,7 @@ jobs:
           author_name: 'Github Build Bot'
           author_email: 'buildbot@fishtownanalytics.com'
           message: 'adding performance baseline for ${{ needs.latest-runner.outputs.release_id }}'
-          branch: 'performance-bot/main_${{steps.variables.outputs.release_id}}_${{GITHUB.RUN_ID}}'
+          new_branch: 'performance-bot/main_${{steps.variables.outputs.release_id}}_${{GITHUB.RUN_ID}}'
           push: 'origin origin/performance-bot/main_${{steps.variables.outputs.release_id}}_${{GITHUB.RUN_ID}}'
 
       - name: Create Pull Request
