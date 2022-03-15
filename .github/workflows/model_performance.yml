@@ -205,7 +205,7 @@ jobs:
     if: ${{ needs.latest-runner.outputs.open_prs == 'yes' && needs.latest-runner.outputs.release_branch != 'main' }}
     # depends on `model` as a separate job so that the baseline can be committed to more than one branch
     # i.e. release branch and main
-    needs: [model]
+    needs: [latest-runner, model]
     name: Open PR for release branch (if specified)
     runs-on: ubuntu-latest
     steps:
@@ -257,7 +257,7 @@ jobs:
     if: ${{ needs.latest-runner.outputs.open_prs == 'yes' }}
     # depends on `model` as a separate job so that the baseline can be committed to more than one branch
     # i.e. release branch and main
-    needs: [model]
+    needs: [latest-runner, model]
     name: Open PR for main (if specified)
     runs-on: ubuntu-latest
     steps:
