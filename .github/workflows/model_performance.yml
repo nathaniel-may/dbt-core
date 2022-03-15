@@ -236,7 +236,7 @@ jobs:
       - name: Push Branch
         uses: EndBug/add-and-commit@v8
         with:
-          add: ${{ github.workspace }}/performance/baselines
+          add: performance/baselines
           author_name: 'Github Build Bot'
           author_email: 'buildbot@fishtownanalytics.com'
           message: 'adding performance baseline for ${{ needs.latest-runner.outputs.release_id }}'
@@ -287,7 +287,7 @@ jobs:
       - name: Push Branch
         uses: EndBug/add-and-commit@v8
         with:
-          add: ${{ github.workspace }}/performance/baselines
+          add: performance/baselines
           author_name: 'Github Build Bot'
           author_email: 'buildbot@fishtownanalytics.com'
           message: 'adding performance baseline for ${{ needs.latest-runner.outputs.release_id }}'
