@@ -202,7 +202,7 @@ jobs:
           path: performance/baselines/${{ needs.latest-runner.outputs.release_id }}/
 
   pr-release-branch:
-    if: ${{ needs.latest-runner.outputs.open_prs }} == 'yes' && ${{ needs.latest-runner.outputs.release_branch }} != 'main'
+    if: ${{ needs.latest-runner.outputs.open_prs == 'yes' }} && ${{ needs.latest-runner.outputs.release_branch }} != 'main'
     # depends on `model` as a separate job so that the baseline can be committed to more than one branch
     # i.e. release branch and main
     needs: [model]
@@ -232,7 +232,7 @@ jobs:
           author_email: 'buildbot@fishtownanalytics.com'
           message: 'adding performance baseline for ${{ needs.latest-runner.outputs.release_id }}'
           new_branch: 'performance-bot/release_${{steps.variables.outputs.release_id}}_${{GITHUB.RUN_ID}}'
-          push: 'origin origin/performance-bot/release_${{steps.variables.outputs.release_id}}_${{GITHUB.RUN_ID}}'
+          push: '--set-upstream origin performance-bot/release_${{steps.variables.outputs.release_id}}_${{GITHUB.RUN_ID}}'
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
@@ -275,7 +275,7 @@ jobs:
           author_email: 'buildbot@fishtownanalytics.com'
           message: 'adding performance baseline for ${{ needs.latest-runner.outputs.release_id }}'
           new_branch: 'performance-bot/main_${{steps.variables.outputs.release_id}}_${{GITHUB.RUN_ID}}'
-          push: 'origin origin/performance-bot/main_${{steps.variables.outputs.release_id}}_${{GITHUB.RUN_ID}}'
+          push: '--set-upstream origin performance-bot/main_${{steps.variables.outputs.release_id}}_${{GITHUB.RUN_ID}}'
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
