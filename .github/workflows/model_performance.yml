@@ -145,6 +145,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
+      - name: '[DEBUG] print variables'
+        run: |
+          echo "all variables defined in latest-runner > Set Variables > outputs"
+          echo "${{ needs.latest-runner.outputs.cache_key }}"
+          echo "${{ needs.latest-runner.outputs.release_id }}"
+          echo "${{ needs.latest-runner.outputs.commit }}"
+          echo "${{ needs.latest-runner.outputs.release_branch }}"
+
       - name: Setup Python
         uses: actions/setup-python@v2.2.2
         with:
