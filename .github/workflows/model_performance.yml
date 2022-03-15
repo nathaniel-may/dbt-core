@@ -185,7 +185,7 @@ jobs:
         run: chmod +x ./performance/app
 
       - name: '[DEBUG] ls baseline directory before run'
-        run: ls performance/baselines/
+        run: ls -R performance/baselines/
 
       # `${{ github.workspace }}` is used to pass the absolute path
       # TODO CHANGE NUMBER OF RUNS BEFORE MERGING
@@ -194,7 +194,7 @@ jobs:
         run: mkdir ${{ github.workspace }}/performance/tmp/ && mkdir -p performance/baselines/${{ needs.latest-runner.outputs.release_id }}/ && performance/app model -v ${{ needs.latest-runner.outputs.release_id }} -b ${{ github.workspace }}/performance/baselines/ -p ${{ github.workspace }}/performance/projects/ -t ${{ github.workspace }}/performance/tmp/ -n 2
 
       - name: '[DEBUG] ls baseline directory after run'
-        run: ls performance/baselines/
+        run: ls -R performance/baselines/
 
       - uses: actions/upload-artifact@v3
         with:
@@ -224,14 +224,17 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: ${{ needs.latest-runner.outputs.release_branch }}
-      
+            
+      - name: '[DEBUG] ls baselines before artifact download'
+        run: ls -R performance/baselines/
+
       - uses: actions/download-artifact@v3
         with:
           name: baseline
           path: performance/baselines/${{ needs.latest-runner.outputs.release_id }}
 
       - name: '[DEBUG] ls baselines after artifact download'
-        run: ls performance/baselines/
+        run: ls -R performance/baselines/
 
       - name: Push Branch
         uses: EndBug/add-and-commit@v8
@@ -275,6 +278,9 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: main
+
+      - name: '[DEBUG] ls baselines before artifact download'
+        run: ls -R performance/baselines/
       
       - uses: actions/download-artifact@v3
         with:
@@ -282,7 +288,7 @@ jobs:
           path: performance/baselines/${{ needs.latest-runner.outputs.release_id }}
 
       - name: '[DEBUG] ls baselines after artifact download'
-        run: ls performance/baselines/
+        run: ls -R performance/baselines/
 
       - name: Push Branch
         uses: EndBug/add-and-commit@v8
