@@ -28,9 +28,9 @@ on:
         description: '(^^ always run from main) dbt version to model (must be non-prerelease in Pypi)'
         default: 9.9.9
         required: true
-      commit_results:
-        description: Open PRs to main and release branch (branch name inferred from provided version) (true/false)
-        default: 'false'
+      open_prs:
+        description: Open PRs to main and release branch? (branch name inferred from provided version) (yes/no)
+        default: 'no'
         required: true
 
 env:
@@ -75,7 +75,7 @@ jobs:
             echo "Workflow dispatch event detected"
             local_release_id=${{github.event.inputs.release_id}}
             echo "::set-output name=release_id::${{github.event.inputs.release_id}}"
-            echo "::set-output name=commit::${{github.event.inputs.commit_results}}"
+            echo "::set-output name=open_prs::${{github.event.inputs.open_prs}}"
           # release.tag_name has a v prepended. we must remove it.
           else
             echo "release event detected"
@@ -83,7 +83,7 @@ jobs:
             without_v=${with_v:1}
             local_release_id=$without_v
             echo "::set-output name=release_id::$without_v"
-            echo "::set-output name=commit::true"
+            echo "::set-output name=open_prs::yes"
           fi
 
           # string manipulation to get the branch name. It can't be discovered from the github api
@@ -194,7 +194,7 @@ jobs:
           path: performance/baselines/${{ needs.latest-runner.outputs.release_id }}/
 
   pr-release-branch:
-    if: ${{ needs.latest-runner.outputs.commit }} == 'true' && ${{ needs.latest-runner.outputs.release_branch }} != 'main'
+    if: ${{ needs.latest-runner.outputs.open_prs }} == 'yes' && ${{ needs.latest-runner.outputs.release_branch }} != 'main'
     # depends on `model` as a separate job so that the baseline can be committed to more than one branch
     # i.e. release branch and main
     needs: [model]
@@ -237,7 +237,7 @@ jobs:
 
 
   pr-main-branch:
-    if: ${{ needs.latest-runner.outputs.commit == 'true' }}
+    if: ${{ needs.latest-runner.outputs.open_prs == 'yes' }}
     # depends on `model` as a separate job so that the baseline can be committed to more than one branch
     # i.e. release branch and main
     needs: [model]
