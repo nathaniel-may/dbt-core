@@ -305,6 +305,6 @@ jobs:
         with:
           author: 'Github Build Bot <buildbot@fishtownanalytics.com>'
           draft: true
-          base: main
+          base: origin/main
           title: 'Adding performance modeling for ${{needs.latest-runner.outputs.release_id}}'
           branch: 'performance-bot/main_${{needs.latest-runner.outputs.release_id}}_${{GITHUB.RUN_ID}}'
