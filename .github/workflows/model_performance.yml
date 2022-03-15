@@ -236,6 +236,9 @@ jobs:
       - name: '[DEBUG] ls baselines after artifact download'
         run: ls -R performance/baselines/
 
+      - name: '[DEBUG] git diff'
+        run: git diff origin/performance-bot/release_${{needs.latest-runner.outputs.release_id}}_${{GITHUB.RUN_ID}}
+
       - name: Push Branch
         uses: EndBug/add-and-commit@v8
         with:
@@ -289,6 +292,9 @@ jobs:
 
       - name: '[DEBUG] ls baselines after artifact download'
         run: ls -R performance/baselines/
+
+      - name: '[DEBUG] git diff'
+        run: git diff origin/main
 
       - name: Push Branch
         uses: EndBug/add-and-commit@v8
