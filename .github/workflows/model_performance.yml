@@ -25,11 +25,11 @@ on:
       # if we ever want to model pre-releases, we would need to handle pre-release version numbers
       # here and in the runner. Even if we use a semver library I suspect it will be rather difficult.
       release_id:
-        description: '(^^ always run from main)\ndbt version to model (must be non-prerelease in Pypi)'
+        description: '(^^ always run from main) dbt version to model (must be non-prerelease in Pypi)'
         default: 9.9.9
         required: true
       commit_results:
-        description: commit results to main and release branch (inferred from provided version) (true/false)
+        description: Open PRs to main and release branch (branch name inferred from provided version) (true/false)
         default: 'false'
         required: true
 
@@ -193,7 +193,7 @@ jobs:
           name: baseline
           path: performance/baselines/${{ needs.latest-runner.outputs.release_id }}/
 
-  commit-release-branch:
+  pr-release-branch:
     if: ${{ needs.latest-runner.outputs.commit }} == 'true' && ${{ needs.latest-runner.outputs.release_branch }} != 'main'
     # depends on `model` as a separate job so that the baseline can be committed to more than one branch
     # i.e. release branch and main
@@ -216,17 +216,27 @@ jobs:
       - name: '[DEBUG] ls baselines after artifact download'
         run: ls performance/baselines/
 
-        # TODO This actually pushes to main.
-      - name: Commit Baseline
+      - name: Push Branch
         uses: EndBug/add-and-commit@v8
         with:
           add: ${{ github.workspace }}/performance/baselines
           author_name: 'Github Build Bot'
-          author_email: 'bot@nathanielmay.com'
-          # author_email: 'buildbot@fishtownanalytics.com'
+          author_email: 'buildbot@fishtownanalytics.com'
           message: 'adding performance baseline for ${{ needs.latest-runner.outputs.release_id }}'
+          branch: 'performance-bot/release_${{steps.variables.outputs.release_id}}_${{GITHUB.RUN_ID}}'
+          push: 'origin origin/performance-bot/release_${{steps.variables.outputs.release_id}}_${{GITHUB.RUN_ID}}'
 
-  commit-main-branch:
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          author: 'Github Build Bot <buildbot@fishtownanalytics.com>'
+          draft: true
+          base: ${{ needs.latest-runner.outputs.release_branch }}
+          title: 'Adding performance modeling for ${{steps.variables.outputs.release_id}}'
+          branch: 'performance-bot/main_${{steps.variables.outputs.release_id}}_${{GITHUB.RUN_ID}}'
+
+
+  pr-main-branch:
     if: ${{ needs.latest-runner.outputs.commit == 'true' }}
     # depends on `model` as a separate job so that the baseline can be committed to more than one branch
     # i.e. release branch and main
@@ -249,11 +259,21 @@ jobs:
       - name: '[DEBUG] ls baselines after artifact download'
         run: ls performance/baselines/
 
-      - name: Commit Baseline
+      - name: Push Branch
         uses: EndBug/add-and-commit@v8
         with:
           add: ${{ github.workspace }}/performance/baselines
           author_name: 'Github Build Bot'
-          author_email: 'bot@nathanielmay.com'
-          # author_email: 'buildbot@fishtownanalytics.com'
+          author_email: 'buildbot@fishtownanalytics.com'
           message: 'adding performance baseline for ${{ needs.latest-runner.outputs.release_id }}'
+          branch: 'performance-bot/main_${{steps.variables.outputs.release_id}}_${{GITHUB.RUN_ID}}'
+          push: 'origin origin/performance-bot/main_${{steps.variables.outputs.release_id}}_${{GITHUB.RUN_ID}}'
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          author: 'Github Build Bot <buildbot@fishtownanalytics.com>'
+          draft: true
+          base: main
+          title: 'Adding performance modeling for ${{steps.variables.outputs.release_id}}'
+          branch: 'performance-bot/main_${{steps.variables.outputs.release_id}}_${{GITHUB.RUN_ID}}'
