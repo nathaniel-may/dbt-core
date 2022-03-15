@@ -49,7 +49,7 @@ jobs:
     outputs:
       cache_key: ${{ steps.variables.outputs.cache_key }}
       release_id: ${{ steps.variables.outputs.release_id }}
-      commit: ${{ steps.variables.outputs.commit }}
+      open_prs: ${{ steps.variables.outputs.open_prs }}
       release_branch: ${{ steps.variables.outputs.release_branch }}
     steps:
 
@@ -148,10 +148,10 @@ jobs:
       - name: '[DEBUG] print variables'
         run: |
           echo "all variables defined in latest-runner > Set Variables > outputs"
-          echo "${{ needs.latest-runner.outputs.cache_key }}"
-          echo "${{ needs.latest-runner.outputs.release_id }}"
-          echo "${{ needs.latest-runner.outputs.commit }}"
-          echo "${{ needs.latest-runner.outputs.release_branch }}"
+          echo "cache_key:      ${{ needs.latest-runner.outputs.cache_key }}"
+          echo "release_id:     ${{ needs.latest-runner.outputs.release_id }}"
+          echo "open_prs:       ${{ needs.latest-runner.outputs.open_prs }}"
+          echo "release_branch: ${{ needs.latest-runner.outputs.release_branch }}"
 
       - name: Setup Python
         uses: actions/setup-python@v2.2.2
@@ -202,7 +202,7 @@ jobs:
           path: performance/baselines/${{ needs.latest-runner.outputs.release_id }}/
 
   pr-release-branch:
-    if: ${{ needs.latest-runner.outputs.open_prs == 'yes' }} && ${{ needs.latest-runner.outputs.release_branch }} != 'main'
+    if: ${{ needs.latest-runner.outputs.open_prs == 'yes' && needs.latest-runner.outputs.release_branch != 'main' }}
     # depends on `model` as a separate job so that the baseline can be committed to more than one branch
     # i.e. release branch and main
     needs: [model]
