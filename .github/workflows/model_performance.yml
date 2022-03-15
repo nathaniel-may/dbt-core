@@ -236,7 +236,7 @@ jobs:
       - name: '[DEBUG] ls baselines after artifact download'
         run: ls -R performance/baselines/
 
-      - name: Push Branch
+      - name: Make Branch
         uses: EndBug/add-and-commit@v8
         with:
           add: performance/baselines
@@ -244,8 +244,7 @@ jobs:
           author_email: 'buildbot@fishtownanalytics.com'
           message: 'adding performance baseline for ${{ needs.latest-runner.outputs.release_id }}'
           new_branch: 'performance-bot/release_${{needs.latest-runner.outputs.release_id}}_${{GITHUB.RUN_ID}}'
-          push: '--set-upstream origin performance-bot/release_${{needs.latest-runner.outputs.release_id}}_${{GITHUB.RUN_ID}}'
-
+          
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
@@ -290,7 +289,7 @@ jobs:
       - name: '[DEBUG] ls baselines after artifact download'
         run: ls -R performance/baselines/
 
-      - name: Push Branch
+      - name: Make Branch
         uses: EndBug/add-and-commit@v8
         with:
           add: performance/baselines
@@ -298,7 +297,6 @@ jobs:
           author_email: 'buildbot@fishtownanalytics.com'
           message: 'adding performance baseline for ${{ needs.latest-runner.outputs.release_id }}'
           new_branch: 'performance-bot/main_${{needs.latest-runner.outputs.release_id}}_${{GITHUB.RUN_ID}}'
-          push: '--set-upstream origin performance-bot/main_${{needs.latest-runner.outputs.release_id}}_${{GITHUB.RUN_ID}}'
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
